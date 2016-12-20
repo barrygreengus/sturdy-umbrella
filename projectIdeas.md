@@ -1,3 +1,4 @@
+
 # Project Ideas
 
 Graphs:
@@ -22,3 +23,5 @@ build an A/I for some game, maybe something odd, like settlers, or cards against
  OH! we can make an AI to play a videogame
  - which will be hard, but cool. we can use things like VBA emulators
  
+Be annoying:
+Train a neural net to get past out friend's spam filters and send them lots of memes (this is morally questionable)
