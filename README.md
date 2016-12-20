@@ -13,3 +13,4 @@ for the sake of our sanity.
 Let's at a least:
 * plan out our system before we create it (can be a rough plan)
 * WRITE TESTS FOR OUR CODE (Rust has built-in support for unit tests :D)
+GOT Xubuntu WUBALUBADUBDUB
