@@ -1,4 +1,4 @@
-?# sturdy-umbrella
+# sturdy-umbrella
  Trying to do fun things with Rust. Also, what's Rust?
 
 I suggest that we run all of code in a Linux VM just so we're running the same system.
@@ -38,3 +38,4 @@ http://pages.cs.wisc.edu/~bolo/shipyard/neural/local.html
 http://www.cse.msu.edu/~cse802/notes/ArtificialNeuralNetworks.pdf
 http://ufldl.stanford.edu/wiki/index.php/Neural_Networks
 http://ufldl.stanford.edu/wiki/index.php/Backpropagation_Algorithm
+http://colah.github.io/posts/2015-08-Understanding-LSTMs/
