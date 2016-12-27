@@ -1,65 +1,47 @@
 extern crate rand;
 
 use std::io;
-use std::fmt;
-//use std::option;
-//use std::cmp::Ordering;
+use std::io::stdout;
+use std::io::Write;
 use rand::Rng;
 
-struct BoundedQueue<T> {
-    queue: Vec<T>,
-    max_size: usize,
-}
-
-impl<T: fmt::Display> BoundedQueue<T> {
-    fn new(max_size: usize) -> BoundedQueue<T> {
-        BoundedQueue::<T> {
-            queue: Vec::new(),
-            max_size: max_size,
+// --------- I/O functions ---------------
+fn get_user_int() -> u32 {
+    let mut num = 0;
+    while num == 0 {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)
+            .expect("failed to read line");
+        num = match input.trim().parse::<u32>() {
+            Ok(x)   => x,
+            Err(_)  => 0,
+        };
+        if num == 0 {
+            println!("Invalid: Please enter a numeral greater than 0");
         }
     }
-
-    fn enqueue(&mut self, elem: T) {
-        // insert elem to front of queue
-        self.queue.insert(0, elem);
-        // if queue past capacity, remove from end
-        if self.queue.len() > self.max_size {
-            self.queue.pop();
-        }
-    }
-
-    /*
-    fn dequeue(&mut self) -> Option<T> {
-        self.queue.pop()
-    }
-    */
-
-    fn print(&self) {
-        println!("BoundedBuffer: max_size={}, len={}", self.max_size, self.queue.len());
-        print!("[ ");
-        for item in self.queue.iter() {
-            print!("{} ", item);
-        }
-        println!("]");
-    }
+    num
 }
 
 fn get_user_guess() -> String {
-    let mut user_guess = String::new();
     loop {
-        io::stdin().read_line(&mut user_guess)
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)
             .expect("failed to read line");
-        match user_guess.to_lowercase().trim() {
-            "rock"     => break,
-            "paper"    => break,
-            "scissors" => break,
-            _          => println!("Invalid guess ... "),
+        match input.to_lowercase().trim() {
+            "rock"     => return String::from("rock"),
+            "paper"    => return String::from("paper"),
+            "scissors" => return String::from("scissors"),
+            _          => {
+                println!("Invalid: Please enter 'rock', 'paper', or 'scissors'");
+                continue;
+            },
         };
     }
-    String::from(user_guess.trim())
 }
 
-fn get_comp_guess() -> String {
+// ------------ functions for computer to generate a guess ------------------
+fn get_random_guess() -> String {
     let rando = rand::thread_rng().gen_range(0, 3);
     match rando {
         0 => String::from("rock"),
@@ -69,6 +51,18 @@ fn get_comp_guess() -> String {
     }
 }
 
+fn get_comp_guess(last_comp_move: String, comp_won_last_round: bool) -> String {
+    // if the comp won last round, we think the human may
+    // do what would have beaten the comps winning choice
+    match last_comp_move.as_str() {
+        "rock"     if comp_won_last_round  => String::from("scissors"),
+        "paper"    if comp_won_last_round  => String::from("rock"),
+        "scissors" if comp_won_last_round  => String::from("paper"),
+        _                                  => get_random_guess(),
+    }
+}
+
+// the rock paper scissors win logic
 fn a_beat_b(a: &str, b: &str) -> bool {
     match (a, b) {
         ("rock", "scissors") => true,
@@ -78,55 +72,77 @@ fn a_beat_b(a: &str, b: &str) -> bool {
     }
 }
 
-fn main() {
-    println!("Let's play Rock Paper Scissors!");
-    println!("Input your moves as 'rock', 'paper', or 'scissors'");
-
-    let mut round_num = 0;
-    let mut user_wins = 0;
-    let mut comp_wins = 0;
-    let mut ties = 0;
-    let mut buffer = BoundedQueue::<String>::new(3);
+// function to go through one whole round of games
+fn play_round(games_to_win: u32) -> (u32, u32, u32) {
+    let mut game_num = 0;
+    //      score = (#userwins, #compwins, #ties)
+    let mut score = (0, 0, 0);
+    // give it initial value so the match statement is kosher
     let mut last_comp_move = String::from("");
     let mut comp_won_last_round = false;
 
-    // --- Queue Memory ---
     loop {
-        round_num += 1;
-        if user_wins == 5 || comp_wins == 5 {
-            println!("\nFINAL SCORE | User: {}, Computer: {}, Ties: {}", user_wins, comp_wins, ties);
-            buffer.print();
-            break;
-        }
-        println!("\nRound #{}, guess rock, paper, or scissors ...", round_num);
-        // create random guess
-        let comp_guess = match last_comp_move.as_str() {
-            "rock"     if comp_won_last_round  => String::from("scissors"),
-            "paper"    if comp_won_last_round  => String::from("rock"),
-            "scissors" if comp_won_last_round  => String::from("paper"),
-            _                                  => get_comp_guess(),
+        match score {
+            (u, c, t) if u == games_to_win => {
+                println!("You won the round! {} to {} with {} ties.", u, c, t);
+                return score;
+            },
+            (u, c, t) if c == games_to_win => {
+                println!("You lost the round {} to {} with {} ties.", u,c, t);
+                return score;
+            },
+            _ => {},
         };
-        //}else{
-        //    let comp_guess = get_comp_guess();
-        //}
-        // get user guess
+
+        game_num += 1;
+        // get guesses
+        println!("\nGame #{}\nGuess rock, paper, or scissors ...", game_num);
+        let comp_guess = get_comp_guess(last_comp_move, comp_won_last_round);
         let user_guess = get_user_guess();
 
+        // determine annd record results
         print!("you guessed {}, comp guessed {}. ", user_guess, comp_guess);
-        if a_beat_b(user_guess.as_str(), comp_guess.as_str()) {
-            println!("You won!");
-            user_wins += 1;
-        }else if a_beat_b(comp_guess.as_str(), user_guess.as_str()) {
-            println!("You lost!");
-            comp_wins += 1;
-            comp_won_last_round = true;
-        }else {
-            println!("Tie!");
-            ties += 1;
-        }
-        // record moves
-        buffer.enqueue(user_guess);
-        println!("User: {}, Computer: {}, Ties: {}", user_wins, comp_wins, ties);
+        let user_won = a_beat_b(user_guess.as_str(), comp_guess.as_str());
+        let comp_won = a_beat_b(comp_guess.as_str(), user_guess.as_str());
+        match (user_won, comp_won) {
+            (true, false) => {
+                println!("You won!");
+                score.0 += 1; //user_wins += 1;
+                comp_won_last_round = false;
+            },
+            (false, true) => {
+                println!("You lost!");
+                score.1 += 1; //comp_wins += 1;
+                comp_won_last_round = true;
+            },
+            (false, false) => {
+                println!("Tie!");
+                score.2 += 1; //ties += 1;
+                comp_won_last_round = false;
+            },
+            _ => println!("If this prints, something is wrong."),
+        };
+        println!("Current Score: you: {}, computer: {}, ties: {}", score.0, score.1, score.2);
         last_comp_move = comp_guess;
+    }
+}
+
+fn main() {
+    println!("Let's play Rock Paper Scissors!");
+    println!("Input your moves as 'rock', 'paper', or 'scissors'");
+    println!("------------------------------------------------\n");
+
+    print!("Play best out of how many rounds?: ");
+    stdout().flush().expect("Could not flush stdout.");  // print! doesn't flush stdout itself
+    let num_rounds = get_user_int();
+    print!("\n");
+    print!("Play each round to how many games?: ");
+    stdout().flush().expect("Could not flush stdout.");  // print! doesn't flush stdout itself
+    let games_per_round = get_user_int();
+    print!("\n");
+
+    for round in 0..num_rounds {
+        let score = play_round(games_per_round);
+        println!("Round {}| User:{}, Comp:{}, Ties:{}", round, score.0, score.1, score.2);
     }
 }
