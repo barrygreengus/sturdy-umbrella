@@ -1,0 +1,8 @@
+[package]
+name = "barry_rps"
+version = "0.1.0"
+authors = ["greengus"]
+
+[dependencies]
+random = "0.3.0"
+rand = "*"

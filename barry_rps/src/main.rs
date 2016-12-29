@@ -1,8 +1,9 @@
 extern crate rand;
 
 use std::io;
-use std::io::stdout;
-use std::io::Write;
+use std::io::stdout;  // to get stdout
+use std::io::Write;   // to use stdout().flush()
+use std::cmp::Ordering;
 use rand::Rng;
 
 // --------- I/O functions ---------------
@@ -141,8 +142,17 @@ fn main() {
     let games_per_round = get_user_int();
     print!("\n");
 
+    let mut user_wins = 0;
+    let mut comp_wins = 0;
     for round in 0..num_rounds {
         let score = play_round(games_per_round);
-        println!("Round {}| User:{}, Comp:{}, Ties:{}", round, score.0, score.1, score.2);
+        match score.0.cmp(&score.1) {
+            Ordering::Less    => comp_wins += 1,
+            Ordering::Greater => user_wins += 1,
+            Ordering::Equal   => {/*do nothing*/},
+        }
+        println!("After {} rounds: User has {} rounds to the computer's {} rounds", round+1, user_wins, comp_wins);
     }
+    println!("Final Score: User [{}], Computer [{}]", user_wins, comp_wins);
 }
+
